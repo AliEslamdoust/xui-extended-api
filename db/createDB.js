@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const { logger } = require("../utils/logger");
+const  logger  = require("../utils/logger");
 
 const schemaPath = path.join(__dirname, "schema.sql");
 const schema = fs.readFileSync(schemaPath, "utf8");
@@ -10,16 +10,16 @@ function createDataBase(db) {
     db.serialize(() => {
       db.exec(schema, (err) => {
         if (err) {
-          logger(err, "ERROR");
+          logger.error(err);
           return;
         }
-        logger("Schema applied successfully.", "INFO");
+        logger.info("Schema applied successfully.");
       });
     });
     
     return true
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
     throw new Error(err);
   }
 }
@@ -27,5 +27,3 @@ function createDataBase(db) {
 module.exports = {
   createDataBase,
 };
-
-// "INSERT OR REPLACE INTO outdated_clients (client_id, timestamp) VALUES (?, ?)

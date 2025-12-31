@@ -1,3 +1,6 @@
+const logger = require("../utils/logger");
+const axios = require("axios");
+
 async function restartXray() {
   const config = {
     method: "post",
@@ -13,16 +16,16 @@ async function restartXray() {
   await axios(config)
     .then(function (response) {
       if (response.data.success) {
-        logger("xray-core restarted", "INFO");
+        logger.info("xray-core restarted");
       } else {
         getCookie();
-        logger(response.data.msg, "ERROR");
+        logger.error(response.data.msg);
 
         throw new Error(response.data.msg);
       }
     })
     .catch(function (error) {
-      logger(error, "ERROR");
+      logger.error(error);
 
       throw new Error(error);
     });

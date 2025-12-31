@@ -1,3 +1,4 @@
+const logger = require("../utils/logger");
 
 // receive X-UIs' cookie
 async function getCookie() {
@@ -21,20 +22,20 @@ async function getCookie() {
 
           updateDatabase();
 
-          logger("received new cookie and stored it in json database", "INFO");
+          logger.info("received new cookie and stored it in json database");
         } else {
           setTimeout(() => {
             getCookie();
             updateDatabase();
           }, 2000);
 
-          logger("Error in recieving cookie, something went wrong", "WARN");
+          logger.warn("Error in recieving cookie, something went wrong");
         }
       })
       .catch(function (error) {
-        logger(error, "ERROR");
+        logger.error(error);
       });
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
   }
 }

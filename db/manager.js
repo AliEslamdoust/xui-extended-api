@@ -2,27 +2,24 @@ const sqlite = require("sqlite3").verbose();
 const path = require("path");
 const yaml = require("js-yaml");
 const fs = require("fs");
-const { logger } = require("../utils/logger");
+const logger = require("../utils/logger");
 const { createDataBase } = require("./createDB");
 const { addData, deleteData, updateCookie } = require("./crud_db");
+const { getYAMLConfig, updateConfig } = require("./config");
 
 let inboundsLastUpdate = 0;
-let yamlData;
-
-const config_file_path = path.join(__dirname, "./config.yaml");
-loadConfigFile(); // load config.yaml file
 
 const dbPath = path.join(__dirname, "./db.sqlite");
 loadLocalDatabase();
-const PORT = yamlData.port;
+const PORT = getConfig().port;
 
 // connect to sqlite3 database
-const xui_path = path.join(yamlData.xui_database);
+const xui_path = path.join(getConfig().xui_database);
 const xui_db = new sqlite.Database(xui_path, (err) => {
   if (err) {
-    logger(err, "ERROR");
+    logger.error(err);
   } else {
-    logger("connected to X-UI database", "INFO");
+    logger.info("connected to X-UI database");
   }
 });
 
@@ -36,24 +33,9 @@ function loadLocalDatabase() {
       inboundsLastUpdate++;
     }, 1000);
 
-    logger("database was loaded successfully", "INFO");
+    logger.info("database was loaded successfully");
   } catch (err) {
-    logger(err, "ERROR");
-  }
-}
-
-// load config.yaml file
-function loadConfigFile() {
-  try {
-    yamlData = yaml.load(fs.readFileSync(config_file_path));
-
-    setInterval(() => {
-      inboundsLastUpdate++;
-    }, 1000);
-
-    console.log("yamlData was loaded successfully");
-  } catch (err) {
-    console.log("couldn't load config.yaml! please re-run the program");
+    logger.error(err);
   }
 }
 
@@ -70,7 +52,7 @@ function updateDatabase(isCookie, user, isDelete, table_name, failed) {
       }
     }
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
     // re-try one more time in 5 seconds
     if (!failed)
       setTimeout(() => {
@@ -79,27 +61,17 @@ function updateDatabase(isCookie, user, isDelete, table_name, failed) {
   }
 }
 
-function updateYAMLFile() {
-  let response;
+function handleConfigChange(new_config) {
   try {
-    let yaml_dump = yaml.dump(yamlData);
-
-    fs.writeFile(config_file_path, yaml_dump, (err) => {
-      if (err) {
-        logger(err, "ERROR");
-        response = { ok: false, msg: "an unexpected error has occured" };
-      } else {
-        response = { ok: true, msg: "config file updated" };
-      }
-    });
-
-    loadConfigFile();
+    updateConfig(new_config);
+    logger.info("config file was updated successfully");
   } catch (err) {
-    logger(err, "ERROR");
-    response = { ok: false, msg: "an unexpected error has occured" };
-  } finally {
-    return response;
+    logger.error(err);
   }
+}
+
+function getConfig() {
+  return getYAMLConfig();
 }
 
 module.exports = {
@@ -108,5 +80,6 @@ module.exports = {
   config_file_path,
   PORT,
   updateDatabase,
-  updateYAMLFile,
+  getConfig,
+  handleConfigChange,
 };

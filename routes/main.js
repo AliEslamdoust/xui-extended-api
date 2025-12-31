@@ -1,9 +1,9 @@
 const express = require("express");
-const router = express.Router()
-const {restartXray} = require("../xray-utils/restartXray");
+const router = express.Router();
+const { restartXray } = require("../xray-utils/restartXray");
 
 // start sync of clients usage on current server
-router.get("/api/startSync/", (req, res) => {
+router.get("/api/startSync", (req, res) => {
   const accesscode = req.headers.accesscode;
   let compareKey = comparePassword(accesscode);
 
@@ -11,15 +11,10 @@ router.get("/api/startSync/", (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    const timer = req.query.timer;
-    startInterval(timer * 1000);
+  const timer = req.query.timer;
+  startInterval(timer * 1000);
 
-    res.json({ ok: true, msg: "interval started" });
-  } catch (err) {
-    logger(err, "ERROR");
-    res.json({ ok: false, msg: err });
-  }
+  res.json({ ok: true, msg: "interval started" });
 });
 
 // stop clients syncins
@@ -43,15 +38,10 @@ router.post("/api/updateClient", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
     let client = req.body.client;
     let update_client = await updateClient(client);
 
     res.json(update_client);
-  } catch (err) {
-    logger(err, "ERROR");
-    res.json({ ok: false, msg: err });
-  }
 });
 
 // delete a client from xui
@@ -62,15 +52,10 @@ router.post("/api/removeClient", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let client = req.body.client;
-    let removeClient = await removeClientFromXUI(client.id, client.inbound);
+  let client = req.body.client;
+  let removeClient = await removeClientFromXUI(client.id, client.inbound);
 
-    res.json(removeClient);
-  } catch (err) {
-    logger(err, "ERROR");
-    res.json({ ok: false, msg: err });
-  }
+  res.json(removeClient);
 });
 
 // add a client to xui
@@ -81,15 +66,10 @@ router.post("/api/addClient", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let client = req.body.client;
-    let addClient = await addClientToXUI(client);
+  let client = req.body.client;
+  let addClient = await addClientToXUI(client);
 
-    res.json(addClient);
-  } catch (err) {
-    logger(err, "ERROR");
-    res.json({ ok: false, msg: err });
-  }
+  res.json(addClient);
 });
 
 // change a clients usage in xui database
@@ -100,15 +80,10 @@ router.post("/api/changeClientUsage", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let client = req.body.client;
-    let changeUsage = await changeClientUsage(client);
+  let client = req.body.client;
+  let changeUsage = await changeClientUsage(client);
 
-    res.json(changeUsage);
-  } catch (err) {
-    logger(err, "ERROR");
-    res.json({ ok: false, msg: err });
-  }
+  res.json(changeUsage);
 });
 
 // get a client full information with their subId
@@ -119,15 +94,11 @@ router.get("/api/getClient/:subId", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let subId = req.params.subId;
+  let subId = req.params.subId;
 
-    let clientInfo = await getClientBySubId(subId);
+  let clientInfo = await getClientBySubId(subId);
 
-    res.json({ ok: true, data: clientInfo });
-  } catch (err) {
-    res.json({ ok: false, data: null });
-  }
+  res.json({ ok: true, data: clientInfo });
 });
 
 // get all overused/outdated clients with the time of their expiration in timestamp
@@ -138,16 +109,12 @@ router.get("/api/getFinishedClient", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let users_data = {
-      outdated: database.outdated_clients,
-      overused: database.overused_clients,
-    };
+  let users_data = {
+    outdated: database.outdated_clients,
+    overused: database.overused_clients,
+  };
 
-    res.json({ ok: true, data: users_data });
-  } catch (err) {
-    res.json({ ok: false, data: null });
-  }
+  res.json({ ok: true, data: users_data });
 });
 
 // add the specified subId to database to prevent from syncing between configs (normally this is done for overused/outdated to reduce proccessing time)
@@ -158,17 +125,13 @@ router.get("/api/stopClientSyncing/:subId", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let subId = req.params.subId;
-    let timestamp = Date.now();
+  let subId = req.params.subId;
+  let timestamp = Date.now();
 
-    database.overused_clients[subId] = timestamp;
-    updateDatabase();
+  database.overused_clients[subId] = timestamp;
+  updateDatabase();
 
-    res.json({ ok: true, msg: "clients' syncing stopped" });
-  } catch (err) {
-    res.json({ ok: false, msg: "error in stopping clients' syncing" });
-  }
+  res.json({ ok: true, msg: "clients' syncing stopped" });
 });
 
 // removes the specified subId from overused/outdated so its' configs usage can be synced together
@@ -179,20 +142,13 @@ router.get("/api/syncClient/:subId", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let subId = req.params.subId;
+  let subId = req.params.subId;
 
-    delete database.outdated_clients[subId];
-    delete database.overused_clients[subId];
-    updateDatabase();
+  delete database.outdated_clients[subId];
+  delete database.overused_clients[subId];
+  updateDatabase();
 
-    res.json({ ok: true, msg: "clients' syncing started" });
-  } catch (err) {
-    res.json({
-      ok: false,
-      msg: "error in starting clients' syncing",
-    });
-  }
+  res.json({ ok: true, msg: "clients' syncing started" });
 });
 
 // reload database and config.yaml
@@ -203,14 +159,10 @@ router.get("/api/reload", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    loadConfigFile(); // load config.yaml file
-    await getAllInbounds(); // get all inounbds from xui database
-    getCookie().then(loadLocalDatabase()); // get cookies and store them in database // load db.json file
-    res.json({ ok: true, msg: "reloaded successfully" });
-  } catch (err) {
-    res.json({ ok: false, msg: "internal error in reloading configs" });
-  }
+  loadConfigFile(); // load config.yaml file
+  await getAllInbounds(); // get all inounbds from xui database
+  getCookie().then(loadLocalDatabase()); // get cookies and store them in database // load db.json file
+  res.json({ ok: true, msg: "reloaded successfully" });
 });
 
 // change hash passowrd
@@ -221,17 +173,13 @@ router.post("/api/updatePassword", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    const new_password = req.headers.password;
+  const new_password = req.headers.password;
 
-    let new_hash = await hashPassword(new_password);
-    yamlData.accesscode = new_hash;
+  let new_hash = await hashPassword(new_password);
+  yamlData.accesscode = new_hash;
 
-    updateYAMLFile();
-    res.json({ ok: true, msg: "reloaded successfully" });
-  } catch (err) {
-    res.json({ ok: false, msg: "internal error in reloading configs" });
-  }
+  updateYAMLFile();
+  res.json({ ok: true, msg: "reloaded successfully" });
 });
 
 // get a clients' subId by providing their uuid
@@ -242,15 +190,11 @@ router.get("/api/SIDbyID/:id", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let id = req.params.id;
+  let id = req.params.id;
 
-    let subId = await getSubIdbyId(id);
+  let subId = await getSubIdbyId(id);
 
-    res.json({ ok: true, data: subId });
-  } catch (err) {
-    res.json({ ok: false, data: null });
-  }
+  res.json({ ok: true, data: subId });
 });
 
 // get a clients' subId by providing their email
@@ -261,15 +205,11 @@ router.get("/api/SIDbyEmail/:email", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    let email = req.params.email;
+  let email = req.params.email;
 
-    let subId = await getSubIdbyEmail(email);
+  let subId = await getSubIdbyEmail(email);
 
-    res.json({ ok: true, data: subId });
-  } catch (err) {
-    res.json({ ok: false, data: null });
-  }
+  res.json({ ok: true, data: subId });
 });
 
 // request for restarting xray core
@@ -280,14 +220,9 @@ router.get("/api/restartXray", async (req, res) => {
     res.json({ ok: false, msg: "false access code" });
   }
 
-  try {
-    await restartXray();
+  await restartXray();
 
-    res.json({ ok: true, msg: "xray core restarted successfully" });
-  } catch (err) {
-    res.json({ ok: false, msg: err });
-  }
+  res.json({ ok: true, msg: "xray core restarted successfully" });
 });
 
-
-module.exports = router
+module.exports = router;

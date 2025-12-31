@@ -7,10 +7,6 @@ xui_database: /etc/x-ui/x-ui.db
 # you can change it in bots' management panel
 accesscode: BUUpKWkFFRUFBRUlWWE5sY201aGJXVUJEQUFCQ0ZCaGMzTjNi
 
-# Database update delay in seconds
-# Enter a number greater thatn 1 to avoid spams on database and crashing
-reload_delay: 5
-
 # Servers information for running server
 # Username and Password:
 # Enter the username and password that is used for the X-UI panel

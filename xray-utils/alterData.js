@@ -1,3 +1,6 @@
+const logger = require("../utils/logger");
+const axios = require("axios");
+
 // sync all clients with the same subId
 async function syncClients() {
   try {
@@ -68,7 +71,7 @@ async function syncClients() {
       console.log(client, "has", remainingTraffic, "left");
     }
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
   }
 }
 
@@ -87,7 +90,7 @@ async function changeClientUsage(client) {
             if (err) {
               response = { ok: false, msg: "an unexpected error has occured" };
               reject(err);
-              logger(err, "WARN");
+              logger.warn(err);
             } else {
               resolve("success");
             }
@@ -98,7 +101,7 @@ async function changeClientUsage(client) {
 
     response = { ok: true, msg: "client usage has updated" };
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
     response = { ok: false, msg: "an unexpected error has occured" };
   } finally {
     return response;
@@ -155,9 +158,8 @@ async function updateClient(client) {
             getCookie();
           }, 2000);
 
-          logger(
-            `Error in changing clients' stat: ${email} - id: ${id}: ${response.data.msg}`,
-            "WARN"
+          logger.warn(
+            `Error in changing clients' stat: ${email} - id: ${id}: ${response.data.msg}`
           );
 
           return {
@@ -171,10 +173,10 @@ async function updateClient(client) {
         }
       })
       .catch(function (error) {
-        logger(error, "WARN");
+        logger.warn(error);
       });
   } catch (err) {
-    logger(err, "WARN");
+    logger.warn(err);
     serverResponse = { ok: true, msg: err };
   } finally {
     return serverResponse;
@@ -200,13 +202,12 @@ async function removeClientFromXUI(id, inbound) {
     await axios(config)
       .then(function (response) {
         if (response.data.success) {
-          logger("client deleted from x-ui panel: " + id, "INFO");
+          logger.info("client deleted from x-ui panel: " + id);
           serverResponse = { ok: true, msg: "client deleted from x-ui panel" };
         } else {
           getCookie();
-          logger(
-            `error in removing client: id - ${id}, msg: ${response.data.msg}`,
-            "WARN"
+          logger.warn(
+            `error in removing client: id - ${id}, msg: ${response.data.msg}`
           );
 
           serverResponse = {
@@ -216,14 +217,14 @@ async function removeClientFromXUI(id, inbound) {
         }
       })
       .catch(function (error) {
-        logger(error, "WARN");
+        logger.warn(error);
         serverResponse = {
           ok: false,
           msg: "an unexpected error has occured",
         };
       });
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
     serverResponse = {
       ok: false,
       msg: "an unexpected error has occured",
@@ -271,11 +272,11 @@ async function addClientToXUI(client) {
     await axios(config)
       .then(function (response) {
         if (response.data.success) {
-          logger("new client added to x-ui panel: " + client.email, "INFO");
+          logger.info("new client added to x-ui panel: " + client.email);
           serverResponse = { ok: true, msg: "new client added to x-ui panel" };
         } else {
           getCookie();
-          logger(response.data.msg, "WARN");
+          logger.warn(response.data.msg);
 
           serverResponse = {
             ok: false,
@@ -286,14 +287,14 @@ async function addClientToXUI(client) {
       .catch(function (error) {
         getCookie();
 
-        logger(error, "WARN");
+        logger.warn(error);
         serverResponse = {
           ok: false,
           msg: "an unexpected error has occured",
         };
       });
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
     serverResponse = {
       ok: false,
       msg: "an unexpected error has occured",
@@ -302,3 +303,10 @@ async function addClientToXUI(client) {
     return serverResponse;
   }
 }
+
+module.exports = {
+  syncClients,
+  changeClientUsage,
+  updateClient,
+  addClientToXUI,
+};

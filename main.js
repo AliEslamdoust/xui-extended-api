@@ -3,9 +3,17 @@ const app = express();
 const axios = require("axios");
 const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
-const { yamlData, database, PORT } = require("./db/manager");
+const { PORT } = require("./db/manager");
 const router = require("./routes/main");
 const { getAllInbounds } = require("./xray-utils/receiveData");
+
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+
+  res
+    .status(err.statusCode || 500)
+    .json({ ok: false, msg: err.message || "An unexpected error has occured" });
+});
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -31,5 +39,4 @@ function stopInterval() {
   clearInterval(interval);
 }
 
-
-app.listen(PORT, console.log("server started on port", PORT));
+app.listen(PORT, logger.info("server started on port", PORT));

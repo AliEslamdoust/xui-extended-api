@@ -1,4 +1,5 @@
 const { yamlData } = require("../db/manager");
+const logger = require("../utils/logger");
 
 // get all clients subscription ids
 function getAllSubIds() {
@@ -75,7 +76,7 @@ async function getClientBySubId(subId) {
           [email],
           (err, res) => {
             if (err) {
-              logger(err, "ERROR");
+              logger.error(err);
               reject(err);
             } else {
               if (res) {
@@ -83,7 +84,7 @@ async function getClientBySubId(subId) {
                 data.down += res.down;
                 resolve("success");
               } else {
-                logger("client doesn't exist", "WARN");
+                logger.warn("client doesn't exist");
                 reject("client doesn't exist");
               }
             }
@@ -91,7 +92,7 @@ async function getClientBySubId(subId) {
         );
       });
     } catch (err) {
-      logger(err, "ERROR");
+      logger.error(err);
     }
   }
 
@@ -147,7 +148,7 @@ async function getAllInbounds() {
           [inbound],
           (err, res) => {
             if (err) {
-              logger(err, "WARN");
+              logger.warn(err);
               reject(err);
             } else {
               resolve(JSON.parse(res.settings).clients);
@@ -158,7 +159,7 @@ async function getAllInbounds() {
       localInbounds[inbound] = inbounds_data;
     }
   } catch (err) {
-    logger(err, "ERROR");
+    logger.error(err);
   } finally {
     return localInbounds;
   }
