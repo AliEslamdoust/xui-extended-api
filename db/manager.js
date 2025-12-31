@@ -3,18 +3,17 @@ const path = require("path");
 const yaml = require("js-yaml");
 const fs = require("fs");
 const { logger } = require("../utils/logger");
+const { createDataBase } = require("./createDB");
+const { addData, deleteData, updateCookie } = require("./crud_db");
 
 let inboundsLastUpdate = 0;
-let yamlData, database;
+let yamlData;
 
 const config_file_path = path.join(__dirname, "./config.yaml");
 loadConfigFile(); // load config.yaml file
-const log_file_path = path.join(__dirname, "./log.txt");
 
-const database_file_path = path.join(__dirname, "./db.json");
-const database_backup_file_path = path.join(__dirname, "./db_backup.json");
-loadLocalDatabase(); // load db.json file
-
+const dbPath = path.join(__dirname, "./db.sqlite");
+loadLocalDatabase();
 const PORT = yamlData.port;
 
 // connect to sqlite3 database
@@ -30,13 +29,14 @@ const xui_db = new sqlite.Database(xui_path, (err) => {
 // update local database variable "database"
 function loadLocalDatabase() {
   try {
-    database = JSON.parse(fs.readFileSync(database_file_path));
+    const db = new sqlite.Database(dbPath);
+    createDataBase(db);
 
     setInterval(() => {
       inboundsLastUpdate++;
     }, 1000);
 
-    console.log("database was loaded successfully");
+    logger("database was loaded successfully", "INFO");
   } catch (err) {
     logger(err, "ERROR");
   }
@@ -57,21 +57,25 @@ function loadConfigFile() {
   }
 }
 
-// update database json file
-function updateDatabase(failed) {
+// update database sqlite
+function updateDatabase(isCookie, user, isDelete, table_name, failed) {
   try {
-    let file_path;
-    if (failed) file_path = database_backup_file_path;
-    else file_path = database_file_path;
-
-    fs.writeFile(file_path, JSON.stringify(database), (err) => {
-      if (err) {
-        updateDatabase(true);
-        logger(err, "ERROR");
+    if (isCookie) {
+      updateCookie(db, database.cookie);
+    } else {
+      if (isDelete) {
+        deleteData(db, table_name, user);
+      } else {
+        addData(db, table_name, user);
       }
-    });
+    }
   } catch (err) {
     logger(err, "ERROR");
+    // re-try one more time in 5 seconds
+    if (!failed)
+      setTimeout(() => {
+        updateDatabase(isCookie, user, isDelete, table_name, true);
+      }, 5000);
   }
 }
 
@@ -101,10 +105,8 @@ function updateYAMLFile() {
 module.exports = {
   xui_db,
   yamlData,
-  database,
   config_file_path,
-  log_file_path,
-  database_file_path,
-  database_backup_file_path,
   PORT,
+  updateDatabase,
+  updateYAMLFile,
 };

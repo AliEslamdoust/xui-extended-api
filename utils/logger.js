@@ -1,5 +1,7 @@
 const fs = require("fs");
-const { log_file_path } = require("../db/manager");
+const path = require("path");
+
+const log_file_path = path.join(__dirname, "../logs.log");
 
 // get the date in this format: YYYY-MM-DD HH:MM:SS
 function getCurrentDate() {
@@ -19,12 +21,19 @@ function logger(log, level) {
   try {
     fs.appendFile(
       log_file_path,
-      `[${getCurrentDate()}] ${level}: ${err}\n`,
-      (error) => {log
+      `[${getCurrentDate()}] ${level}: ${log}\n`,
+      (error) => {
         if (error) {
-          logger(error, "ERROR");
+          console.log(
+            "An error occured while logging: ",
+            error,
+            "retrying in 5 seconds..."
+          );
+          setTimeout(() => {
+            logger(log, level);
+          }, 5000);
         } else {
-          console.log(log, "See log.txt for full info");
+          console.log(log, "See logs.log for full info");
         }
       }
     );
@@ -35,4 +44,4 @@ function logger(log, level) {
   }
 }
 
-module.exports = {logger};
+module.exports = { logger };

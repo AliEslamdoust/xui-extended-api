@@ -1,8 +1,6 @@
 node_modules/
 *.log
 db/config.yaml
-db/db.json
-db/db_backup.json
-db/log.txt
+db/db.sqlite
 .vscode/
 .DS_Store
