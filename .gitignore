@@ -1,4 +1,4 @@
-/node_modules
+node_modules/
 *.log
 db/config.yaml
 db/db.sqlite

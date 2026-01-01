@@ -1,13 +1,26 @@
 const express = require("express");
 const app = express();
-const axios = require("axios");
 const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
-const { PORT } = require("./db/manager");
 const router = require("./routes/main");
-const { getAllInbounds } = require("./xray-utils/receiveData");
+const { getYAMLConfig } = require("./db/config");
+const { comparePassword } = require("./utils/passwords");
 
-app.use((err, req, res, next) => {
+const PORT = getYAMLConfig().port;
+
+app.use((req, res, next) => {
+  const accesscode = req.headers.accesscode;
+  let compareKey = comparePassword(accesscode);
+
+  if (!compareKey) {
+    res.json({ ok: false, msg: "Invalid access code!" });
+    return;
+  }
+
+  next();
+});
+
+app.use((err, res) => {
   logger.error(err.stack);
 
   res
@@ -17,26 +30,6 @@ app.use((err, req, res, next) => {
 
 app.use(bodyParser.json());
 app.use(express.json());
-app.use("/", router);
-
-let localInbounds = getAllInbounds(); // get all inbounds from xui database
-
-// API
-
-// a function to restart the xray core when it's called
-
-let interval;
-function startInterval(time) {
-  clearInterval(interval);
-
-  syncClients();
-  interval = setInterval(() => {
-    syncClients();
-  }, time);
-}
-
-function stopInterval() {
-  clearInterval(interval);
-}
+app.use("", router);
 
 app.listen(PORT, logger.info("server started on port", PORT));

@@ -1,8 +1,12 @@
 const logger = require("../utils/logger");
+const axios = require("axios");
+const { updateDatabase, getConfig } = require("../db/manager");
 
 // receive X-UIs' cookie
 async function getCookie() {
   try {
+    let yamlData = getConfig();
+
     await axios({
       method: "post",
       maxBodyLength: Infinity,
@@ -18,15 +22,14 @@ async function getCookie() {
       .then(function (response) {
         if (response.data.success) {
           let cookie = response.headers["set-cookie"][0];
-          database.cookie = cookie;
 
-          updateDatabase();
+          updateDatabase({ isCookie: true, cookie });
 
           logger.info("received new cookie and stored it in json database");
         } else {
           setTimeout(() => {
             getCookie();
-            updateDatabase();
+            updateDatabase(true);
           }, 2000);
 
           logger.warn("Error in recieving cookie, something went wrong");
@@ -39,3 +42,5 @@ async function getCookie() {
     logger.error(err);
   }
 }
+
+module.exports = getCookie;

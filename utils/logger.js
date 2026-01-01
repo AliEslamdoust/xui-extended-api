@@ -11,8 +11,7 @@ const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
     winston.format.timestamp(),
-    mainFormat,
-    winston.format.json()
+    mainFormat
   ),
   transports: [
     new winston.transports.Console(),

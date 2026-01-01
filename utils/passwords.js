@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const logger = require("../utils/logger");
+const { getYAMLConfig } = require("../db/config");
 
 // create a new hash for passwords
 async function hashPassword(password) {
@@ -11,13 +11,11 @@ async function hashPassword(password) {
 
 // compare stored hash with entered password
 async function comparePassword(password) {
-  try {
-    const result = await bcrypt.compare(password, yamlData.accesscode);
-    return result;
-  } catch (err) {
-    logger.error(err);
-    return false;
-  }
+  const config = getYAMLConfig();
+
+  const result = await bcrypt.compare(password, config.accesscode);
+  
+  return result;
 }
 
 module.exports = {

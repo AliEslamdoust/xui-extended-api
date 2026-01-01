@@ -1,26 +1,21 @@
-const { yamlData } = require("../db/manager");
+const { getAllClientsUsage } = require("../db/crud.xui.db");
+const { getConfig } = require("../db/manager");
 const logger = require("../utils/logger");
+// get all inbounds from xui database
 
 // get all clients subscription ids
-function getAllSubIds() {
+async function getAllSubIds() {
+  let localInbounds = await getAllInbounds();
   let clients = new Array();
 
-  for (let inbound_id in Object.keys(localInbounds)) {
-    let inbound = localInbounds[Object.keys(localInbounds)[inbound_id]];
+  for (let inbound_id of Object.keys(localInbounds)) {
+    let inbound = localInbounds[inbound_id];
 
-    for (let index in inbound) {
-      let subId = inbound[index].subId;
-      let clientExists = false;
+    for (let client of inbound) {
+      let subId = client.subId;
+      let clientExists = clients.includes(subId);
 
-      for (let client of clients) {
-        if (client == subId) {
-          clientExists = true;
-        }
-      }
-
-      if (!clientExists) {
-        clients.push(subId);
-      }
+      if (!clientExists) clients.push(subId);
     }
   }
 
@@ -29,7 +24,7 @@ function getAllSubIds() {
 
 // get a clients information with their subscription id
 async function getClientBySubId(subId) {
-  await getAllInbounds();
+  let localInbounds = await getAllInbounds();
 
   let data = {
     id: [],
@@ -48,13 +43,14 @@ async function getClientBySubId(subId) {
   };
 
   for (let index in Object.keys(localInbounds)) {
-    let inbound = localInbounds[Object.keys(localInbounds)[index]];
+    let inbound_id = Object.keys(localInbounds)[index];
+    let inbound = localInbounds[inbound_id];
 
     for (let client of inbound) {
       if (client.subId == subId) {
         data.id.push(client.id);
         data.email.push(client.email);
-        data.inbound.push(parseInt(Object.keys(localInbounds)[index]));
+        data.inbound.push(parseInt(inbound_id));
 
         if (index == 0) {
           data.limitIp = client.limitIp;
@@ -68,31 +64,13 @@ async function getClientBySubId(subId) {
     }
   }
 
-  for (let email of data.email) {
-    try {
-      await new Promise((resolve, reject) => {
-        xui_db.get(
-          "SELECT up,down FROM client_traffics WHERE email = ?",
-          [email],
-          (err, res) => {
-            if (err) {
-              logger.error(err);
-              reject(err);
-            } else {
-              if (res) {
-                data.up += res.up;
-                data.down += res.down;
-                resolve("success");
-              } else {
-                logger.warn("client doesn't exist");
-                reject("client doesn't exist");
-              }
-            }
-          }
-        );
-      });
-    } catch (err) {
-      logger.error(err);
+  let allClientUsage = await getAllClientsUsage();
+  for (let clientDetail of allClientUsage) {
+    for (let email of data.email) {
+      if (clientDetail.email == email) {
+        data.up += clientDetail.up;
+        data.down += clientDetail.down;
+      }
     }
   }
 
@@ -101,7 +79,7 @@ async function getClientBySubId(subId) {
 
 // get a clients subId by providing their id
 async function getSubIdbyId(id) {
-  await getAllInbounds();
+  let localInbounds = await getAllInbounds();
   let subId;
 
   for (let index in Object.keys(localInbounds)) {
@@ -119,7 +97,7 @@ async function getSubIdbyId(id) {
 
 // get a clients subId by providing their email
 async function getSubIdbyEmail(email) {
-  await getAllInbounds();
+  let localInbounds = await getAllInbounds();
   let subId;
 
   for (let index in Object.keys(localInbounds)) {
@@ -135,34 +113,17 @@ async function getSubIdbyEmail(email) {
   return subId;
 }
 
-// get all inbounds from xui database
+// get all inbounds with clients from xui database
 async function getAllInbounds() {
-  const inbound_ids = yamlData.xui.inbounds;
+  let config = getConfig();
+  const inbound_ids = config.xui.inbounds;
   let localInbounds = new Object();
 
-  try {
-    for (let inbound of inbound_ids) {
-      let inbounds_data = await new Promise((resolve, reject) => {
-        xui_db.get(
-          "SELECT settings FROM inbounds WHERE id = ?",
-          [inbound],
-          (err, res) => {
-            if (err) {
-              logger.warn(err);
-              reject(err);
-            } else {
-              resolve(JSON.parse(res.settings).clients);
-            }
-          }
-        );
-      });
-      localInbounds[inbound] = inbounds_data;
-    }
-  } catch (err) {
-    logger.error(err);
-  } finally {
-    return localInbounds;
+  for (let inbound of inbound_ids) {
+    localInbounds[inbound] = await getAllInbounds(inbound);
   }
+
+  return localInbounds;
 }
 
 module.exports = {
@@ -170,5 +131,5 @@ module.exports = {
   getClientBySubId,
   getSubIdbyId,
   getSubIdbyEmail,
-  getAllInbounds,
+  inbounds: () => getAllInbounds(),
 };

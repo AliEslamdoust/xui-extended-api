@@ -31,4 +31,4 @@ async function restartXray() {
     });
 }
 
-export default restartXray;
+module.exports =  restartXray;

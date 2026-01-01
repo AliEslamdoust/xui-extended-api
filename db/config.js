@@ -5,8 +5,7 @@ const logger = require("../utils/logger");
 
 const config_file_path = path.join(__dirname, "./config.yaml");
 
-let yamlData;
-loadConfigFile();
+let config = loadConfigFile();
 
 fs.watchFile(config_file_path, (curr, prev) => {
   if (curr.mtime !== prev.mtime) {
@@ -16,17 +15,20 @@ fs.watchFile(config_file_path, (curr, prev) => {
 
 // load config.yaml file
 function loadConfigFile() {
-  try {
-    yamlData = yaml.load(fs.readFileSync(config_file_path));
-    logger.info("yamlData was loaded successfully");
-  } catch (err) {
-    logger.error("couldn't load config.yaml! please re-run the program");
-  }
+  return yaml.load(
+    fs.readFileSync(config_file_path, (err) => {
+      if (err) {
+        throw new Error("couldn't load config.yaml! please re-run the program");
+      } else {
+        logger.info("config was loaded successfully");
+      }
+    })
+  );
 }
 
 // write config.yaml changes, send a restart log if required
 function saveConfigFile(new_config) {
-  if (new_config.PORT !== yamlData.PORT) {
+  if (new_config.PORT !== config.PORT) {
     setInterval(() => {
       logger.warn(
         "Port has been changed, please restart the server to apply changes"
@@ -38,6 +40,6 @@ function saveConfigFile(new_config) {
 }
 
 module.exports = {
-  getYAMLConfig: () => yamlData,
+  getYAMLConfig: () => config,
   updateConfig: (new_config) => saveConfigFile(new_config),
 };

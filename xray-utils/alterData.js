@@ -1,77 +1,71 @@
 const logger = require("../utils/logger");
 const axios = require("axios");
+const { getAllSubIds, inbounds, getClientBySubId } = require("./receiveData");
+const { database } = require("../db/manager");
 
 // sync all clients with the same subId
-async function syncClients() {
-  try {
-    /* if inbounds are not updated in the last "reload_delay" seconds, update all inbounds information to sync the last data
-    p.s.: "reload_delay" is a vaiable that can be edited in config.yaml file */
-    if (inboundsLastUpdate >= yamlData.reload_delay) {
-      getAllInbounds();
+async function checkClients() {
+  let clients = await getAllSubIds(); // get all subIds
 
-      inboundsLastUpdate = 0;
+  for (let clientId of clients) {
+    let isClientFinished =
+      !!database({
+        action: "read",
+        table_name: "overused_clients",
+        subId: clientId,
+      }) ||
+      !!database({
+        action: "read",
+        table_name: "outdated_clients",
+        subId: clientId,
+      });
+    if (isClientFinished) continue; // if client is in exceptions list, skip this client
+
+    let clientInfo = await getClientBySubId(clientId); // get clients full information with their subId
+
+    let timestamp = Date.now(); // get the current time stamp
+
+    let remainingTraffic =
+      (
+        (clientInfo.totalGB - (clientInfo.up + clientInfo.down)) /
+        1024 ** 3
+      ).toFixed(2) + "GB"; // show the remaining traffic in traffic+"GB" format
+
+    // if total allowed usage is 0 set remainng traffic to "unlimited"
+    if (clientInfo.totalGB == 0) remainingTraffic = "unlimited";
+    else if (clientInfo.totalGB <= clientInfo.up + clientInfo.down) {
+      // if client exceeds their traffic limit disable them
+
+      let temp_client = { ...clientInfo }; // get a copy of clients information
+
+      let isDisabled = false;
+      for (let index in clientInfo.email) {
+        temp_client.email = clientInfo.email[index]; // set the client-copy email to the email saved on the x-ui panel
+        temp_client.id = clientInfo.id[index]; // set the client-copy uuid to the uuid saved on the x-ui panel
+        temp_client.inbound = clientInfo.inbound[index]; // set the client-copy inbound-id to the inbound-id  saved on the x-ui panel
+        temp_client.enable = false; // disable client
+
+        let updateConfig = await updateClient(temp_client); // update client with the new information (disable client)
+
+        isDisabled = updateConfig.ok;
+      }
+      if (isDisabled) {
+        database({
+          action: "insert",
+          table_name: "overused_clients",
+          subId: clientId,
+        }); // add the current client to the "over useds" exceptions list
+      }
     }
 
-    let allClients = getAllSubIds(); // get all subIds
-
-    for (let client of allClients) {
-      let clientInfo = await getClientBySubId(client); // get clients full information with their subId
-
-      let client_finished = false;
-
-      Object.keys(database.overused_clients).map((config) => {
-        // check to see if client is in overuseds list
-        if (client == config) client_finished = true;
-      });
-      Object.keys(database.outdated_clients).map((config) => {
-        // check to see if client is in outdateds list
-        if (client == config) client_finished = true;
-      });
-
-      if (client_finished) continue; // if client is in exceptions list, skip this client
-
-      let timestamp = Date.now(); // get the current time stamp
-
-      let remainingTraffic =
-        (
-          (clientInfo.totalGB - (clientInfo.up + clientInfo.down)) /
-          1024 ** 3
-        ).toFixed(2) + "GB"; // show the remaining traffic in traffic+"GB" format
-
-      if (clientInfo.totalGB == 0) remainingTraffic = "unlimited";
-      // if total allowed usage is 0 set remainng traffic to "unlimited"
-      else if (clientInfo.totalGB <= clientInfo.up + clientInfo.down) {
-        // if client exceeds their traffic limit: ...
-        for (let index in clientInfo.email) {
-          let temp_client = { ...clientInfo }; // get a copy of clients information
-          temp_client.email = clientInfo.email[index]; // set the client-copy email to the email saved on the x-ui panel
-          temp_client.id = clientInfo.id[index]; // set the client-copy uuid to the uuid saved on the x-ui panel
-          temp_client.inbound = clientInfo.inbound[index]; // set the client-copy inbound-id to the inbound-id  saved on the x-ui panel
-          temp_client.enable = false; // disable client
-
-          let updateConfig = await updateClient(temp_client); // update client with the new information (disable client)
-
-          if (updateConfig.ok) {
-            console.log(client, "was disabled due to overusing traffic");
-
-            database.overused_clients[client] = timestamp; // add the current client to the "over useds" exceptions list
-
-            updateDatabase(); // update local database variable to sync the last data
-          }
-        }
-      }
-
-      if (clientInfo.expiryTime != 0 && clientInfo.expiryTime <= timestamp) {
-        // if clients time is limited and is expired
-        database.outdated_clients[client] = clientInfo.expiryTime; // add the current client to the "out dateds" exceptions list
-
-        updateDatabase(); // update local database variable to sync the last data
-      }
-
-      console.log(client, "has", remainingTraffic, "left");
+    if (clientInfo.expiryTime != 0 && clientInfo.expiryTime <= timestamp) {
+      // if clients time is limited and is expired
+      database({
+        action: "insert",
+        table_name: "outdated_clients",
+        subId: clientId,
+      }); // add the current client to the "out dateds" exceptions list
     }
-  } catch (err) {
-    logger.error(err);
   }
 }
 
@@ -82,21 +76,7 @@ async function changeClientUsage(client) {
     for (let index in email) {
       let traffic = index == 0 ? usage : 0;
 
-      await new Promise((resolve, reject) => {
-        xui_db.run(
-          "UPDATE client_traffics SET up = 0, down = ? WHERE email = ?",
-          [traffic, email[index]],
-          (err) => {
-            if (err) {
-              response = { ok: false, msg: "an unexpected error has occured" };
-              reject(err);
-              logger.warn(err);
-            } else {
-              resolve("success");
-            }
-          }
-        );
-      });
+      await updateClientUsage(traffic, email);
     }
 
     response = { ok: true, msg: "client usage has updated" };
@@ -305,7 +285,7 @@ async function addClientToXUI(client) {
 }
 
 module.exports = {
-  syncClients,
+  checkClients,
   changeClientUsage,
   updateClient,
   addClientToXUI,
