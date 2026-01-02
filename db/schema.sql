@@ -1,9 +1,4 @@
-CREATE TABLE IF NOT EXISTS outdated_clients (
-    client_id TEXT PRIMARY KEY,
-    timestamp INTEGER
-);
-
-CREATE TABLE IF NOT EXISTS overused_clients (
+CREATE TABLE IF NOT EXISTS depleted_clients (
     client_id TEXT PRIMARY KEY,
     timestamp INTEGER
 );

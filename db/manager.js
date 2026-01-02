@@ -3,40 +3,23 @@ const { addData, deleteData, updateCookie, getData } = require("./crud.db");
 const { getYAMLConfig, updateConfig } = require("./config");
 
 // update database sqlite
-function database({
+async function database({
   isCookie,
   cookie,
   subId,
   action,
   table_name,
-  failed,
 }) {
-  try {
-    if (isCookie) {
-      updateCookie(cookie);
-    } else {
-      if (action == "delete") {
-        deleteData(table_name, subId);
-      } else if (action == "insert") {
-        addData(table_name, subId);
-      } else if (action == "read") {
-        getData(table_name, subId);
-      }
+  if (isCookie) {
+    await updateCookie(cookie);
+  } else {
+    if (action == "delete") {
+      await deleteData(table_name, subId);
+    } else if (action == "insert") {
+      await addData(table_name, subId);
+    } else if (action == "read") {
+      await getData(table_name, subId);
     }
-  } catch (err) {
-    logger.error(err);
-    // re-try one more time in 5 seconds
-    if (!failed)
-      setTimeout(() => {
-        database({
-          isCookie,
-          cookie,
-          subId,
-          action,
-          table_name,
-          failed: true,
-        });
-      }, 5000);
   }
 }
 

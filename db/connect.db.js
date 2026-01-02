@@ -7,6 +7,7 @@ const logger = require("../utils/logger");
 const config = getYAMLConfig();
 
 const dbPath = path.join(__dirname, "./db.sqlite");
+// connect to sqlite3 database
 const db = new sqlite.Database(dbPath, (err) => {
   if (err) {
     logger.error(err);
@@ -16,7 +17,7 @@ const db = new sqlite.Database(dbPath, (err) => {
 });
 createDataBase(db);
 
-// connect to sqlite3 database
+// connect to xui sqlite3 database
 const xui_path = path.join(config.xui_database);
 const xui_db = new sqlite.Database(xui_path, (err) => {
   if (err) {

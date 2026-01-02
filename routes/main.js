@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { restartXray } = require("../xray-utils/restartXray");
+const { restartXray } = require("../controllers/restartXray");
 const {
   startInterval,
   stopInterval,
-} = require("../x-ui-uitls/checkClientsInterval");
-const { updateClient } = require("../xray-utils/alterData");
+} = require("../controllers/checkClientsInterval");
+const { updateClient } = require("../controllers/alterData");
 
 // start clients status checking on current server
 router.get("/api/startSync", (req, res) => {

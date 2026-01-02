@@ -1,28 +1,12 @@
 const logger = require("../utils/logger");
 const { db } = require("./connect.db");
 
-let table_names = {
-  overused: "overused_clients",
-  outdated: "outdated_clients",
-};
-
-function getTableName(verbose) {
-  if (Object.keys(table_names).includes(verbose)) {
-    return table_names[verbose];
-  } else {
-    logger.error(`Table Name is not valid. Received table name: ${verbose}`);
-
-    throw new Error(`Table Name is not valid. Received table name: ${verbose}`);
-  }
-}
-
-async function getData(table_verbose, client_name) {
+async function getData(client_name) {
   if (!client_name) return {};
-  let table_name = getTableName(table_verbose);
 
   return await new Promise((resolve, reject) => {
     db.get(
-      `SELECT * FROM ${table_name} WHERE client_name = ?`,
+      `SELECT * FROM depleted_clients WHERE client_name = ?`,
       [client_name],
       (err, res) => {
         if (err) {
@@ -36,14 +20,13 @@ async function getData(table_verbose, client_name) {
   });
 }
 
-async function addData(table_verbose, client_name) {
+async function addData(client_name) {
   if (!client_name) return;
-  let table_name = getTableName(table_verbose);
 
   let timestamp = Date.now();
   await new Promise((res, rej) => {
     db.run(
-      `INSERT INTO ${table_name} (client_name, timestamp) VALUES (?, ?)`,
+      `INSERT INTO depleted_clients (client_name, timestamp) VALUES (?, ?)`,
       [client_name, timestamp],
       (err) => {
         if (err) {
@@ -57,13 +40,12 @@ async function addData(table_verbose, client_name) {
   });
 }
 
-async function deleteData(table_verbose, client_name) {
+async function deleteData(client_name) {
   if (!client_name) return;
-  let table_name = getTableName(table_verbose);
 
   await new Promise((res, rej) => {
     db.run(
-      `DELETE FROM ${table_name} WHERE client_name = ?`,
+      `DELETE FROM depleted_clients WHERE client_name = ?`,
       [client_name],
       (err) => {
         if (err) {

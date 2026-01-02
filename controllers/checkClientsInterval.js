@@ -1,5 +1,5 @@
 const logger = require("../utils/logger");
-const { checkClients } = require("../xray-utils/alterData");
+const { checkClients } = require("./alterData");
 
 let interval;
 

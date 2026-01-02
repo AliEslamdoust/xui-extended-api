@@ -18,7 +18,7 @@ async function updateClientUsage(user_email, traffic) {
   });
 }
 
-async function getAllInbounds(id) {
+async function getInbounds(id) {
   return await new Promise((resolve, reject) => {
     xui_db.get(
       "SELECT settings FROM inbounds WHERE id = ?",
@@ -73,7 +73,7 @@ async function getClientUsage(emails = []) {
 
 module.exports = {
   updateClientUsage,
-  getAllInbounds,
+  getInbounds,
   getAllClientsUsage,
   getClientUsage,
 };

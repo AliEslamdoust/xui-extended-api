@@ -1,70 +1,54 @@
 const logger = require("../utils/logger");
 const axios = require("axios");
-const { getAllSubIds, inbounds, getClientBySubId } = require("./receiveData");
+const { getAllClients } = require("./receiveData");
 const { database } = require("../db/manager");
+const { getData, addData } = require("../db/crud.db");
 
-// sync all clients with the same subId
 async function checkClients() {
-  let clients = await getAllSubIds(); // get all subIds
+  const allClients = await getAllClients(); 
+  const timestamp = Date.now();
 
-  for (let clientId of clients) {
-    let isClientFinished =
-      !!database({
-        action: "read",
-        table_name: "overused_clients",
-        subId: clientId,
-      }) ||
-      !!database({
-        action: "read",
-        table_name: "outdated_clients",
-        subId: clientId,
+  for (const client of allClients) {
+    // Check DB (Exceptions list)
+    const isClientDepleted = await getData(client.subId);
+    if (isClientDepleted) continue;
+
+    // Calculate conditions cleanly
+    const usedTraffic = client.up + client.down;
+    
+    // True if limit exists (>0) AND usage >= limit
+    const isTrafficLimitReached = (client.totalGB > 0) && (usedTraffic >= client.totalGB);
+
+    // True if limit exists (!=0) AND current time > expiry
+    const isExpired = (client.expiryTime !== 0) && (timestamp > client.expiryTime);
+
+    if (isTrafficLimitReached || isExpired) {
+      
+      // Prepare all update requests simultaneously
+      const updatePromises = client.email.map((email, index) => {
+        const temp_client = {
+          ...client,
+          email: email,
+          id: client.id[index],
+          inbound: client.inbound[index],
+          enable: false, // Disable
+        };
+        return updateClient(temp_client);
       });
-    if (isClientFinished) continue; // if client is in exceptions list, skip this client
 
-    let clientInfo = await getClientBySubId(clientId); // get clients full information with their subId
+      // Wait for all inbounds to be disabled
+      try {
+        await Promise.all(updatePromises);
 
-    let timestamp = Date.now(); // get the current time stamp
+        // add to DB if updates succeeded (or partially succeeded)
+        await addData(client.subId);
+        
+        const reason = isTrafficLimitReached ? "Traffic Limit" : "Expired";
+        logger.info(`Disabled client ${client.subId}. Reason: ${reason}`);
 
-    let remainingTraffic =
-      (
-        (clientInfo.totalGB - (clientInfo.up + clientInfo.down)) /
-        1024 ** 3
-      ).toFixed(2) + "GB"; // show the remaining traffic in traffic+"GB" format
-
-    // if total allowed usage is 0 set remainng traffic to "unlimited"
-    if (clientInfo.totalGB == 0) remainingTraffic = "unlimited";
-    else if (clientInfo.totalGB <= clientInfo.up + clientInfo.down) {
-      // if client exceeds their traffic limit disable them
-
-      let temp_client = { ...clientInfo }; // get a copy of clients information
-
-      let isDisabled = false;
-      for (let index in clientInfo.email) {
-        temp_client.email = clientInfo.email[index]; // set the client-copy email to the email saved on the x-ui panel
-        temp_client.id = clientInfo.id[index]; // set the client-copy uuid to the uuid saved on the x-ui panel
-        temp_client.inbound = clientInfo.inbound[index]; // set the client-copy inbound-id to the inbound-id  saved on the x-ui panel
-        temp_client.enable = false; // disable client
-
-        let updateConfig = await updateClient(temp_client); // update client with the new information (disable client)
-
-        isDisabled = updateConfig.ok;
+      } catch (err) {
+        logger.error(`Failed to disable client ${client.subId}:`, err);
       }
-      if (isDisabled) {
-        database({
-          action: "insert",
-          table_name: "overused_clients",
-          subId: clientId,
-        }); // add the current client to the "over useds" exceptions list
-      }
-    }
-
-    if (clientInfo.expiryTime != 0 && clientInfo.expiryTime <= timestamp) {
-      // if clients time is limited and is expired
-      database({
-        action: "insert",
-        table_name: "outdated_clients",
-        subId: clientId,
-      }); // add the current client to the "out dateds" exceptions list
     }
   }
 }
