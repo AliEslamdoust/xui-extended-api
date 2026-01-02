@@ -28,7 +28,7 @@ async function getAllClients() {
   for (const u of allUsage) {
     usageMap.set(u.email, { ...u });
   }
-  
+
   const clientsMap = new Map();
 
   for (const [inboundId, inboundClients] of Object.entries(localInbounds)) {
@@ -74,6 +74,8 @@ async function getAllClients() {
   // Convert the Map values back to an array
   return Array.from(clientsMap.values());
 }
+
+// get a client's full data by providing their subId
 async function getClientBySubId(subId) {
   const localInbounds = await getAllInbounds();
 
@@ -86,7 +88,7 @@ async function getClientBySubId(subId) {
     expiryTime: 0,
     enable: true,
     tgId: "",
-    subId: subId,
+    subId,
     reset: 0,
     down: 0,
     up: 0,
@@ -135,12 +137,13 @@ async function getSubIdbyId(id) {
   for (const clients of Object.values(localInbounds)) {
     const match = clients.find(c => c.id == id);
     if (match) {
-      return match.subId; // Stop searching immediately!
+      return match.subId;
     }
   }
 
-  return null; // Return null if not found
+  return null;
 }
+
 
 // get a client's subId by providing their email
 async function getSubIdbyEmail(email) {
@@ -149,7 +152,7 @@ async function getSubIdbyEmail(email) {
   for (const clients of Object.values(localInbounds)) {
     const match = clients.find(c => c.email == email);
     if (match) {
-      return match.subId; // Stop searching immediately!
+      return match.subId;
     }
   }
 
@@ -181,5 +184,6 @@ module.exports = {
   getClientBySubId,
   getSubIdbyId,
   getSubIdbyEmail,
-  inbounds: () => getAllInbounds(), getAllClients
+  inbounds: () => getAllInbounds(),
+  getAllClients
 };
