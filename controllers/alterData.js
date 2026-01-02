@@ -2,20 +2,26 @@ const logger = require("../utils/logger");
 const axios = require("axios");
 const { getAllClients } = require("./receiveData");
 const { database } = require("../db/manager");
-const { getData, addData } = require("../db/crud.db");
+const { getData, addData, getAllData } = require("../db/crud.db");
 
+// this function checks clients status (overusing traffic and time expiry) and adds users to a exceptions list in database
 async function checkClients() {
-  const allClients = await getAllClients(); 
+  const [allClients, depletedRows] = await Promise.all([
+    getAllClients(),
+    getAllData()
+  ]);
   const timestamp = Date.now();
+
+  let newDepletedClients = new Set();
+  const depletedSet = new Set(depletedRows.map(row => row.client_name));
 
   for (const client of allClients) {
     // Check DB (Exceptions list)
-    const isClientDepleted = await getData(client.subId);
-    if (isClientDepleted) continue;
+    if (depletedSet.has(client.subId)) continue;
 
     // Calculate conditions cleanly
     const usedTraffic = client.up + client.down;
-    
+
     // True if limit exists (>0) AND usage >= limit
     const isTrafficLimitReached = (client.totalGB > 0) && (usedTraffic >= client.totalGB);
 
@@ -23,34 +29,31 @@ async function checkClients() {
     const isExpired = (client.expiryTime !== 0) && (timestamp > client.expiryTime);
 
     if (isTrafficLimitReached || isExpired) {
-      
-      // Prepare all update requests simultaneously
+
       const updatePromises = client.email.map((email, index) => {
         const temp_client = {
           ...client,
           email: email,
           id: client.id[index],
           inbound: client.inbound[index],
-          enable: false, // Disable
+          enable: false, 
         };
         return updateClient(temp_client);
       });
 
-      // Wait for all inbounds to be disabled
       try {
         await Promise.all(updatePromises);
 
-        // add to DB if updates succeeded (or partially succeeded)
-        await addData(client.subId);
-        
-        const reason = isTrafficLimitReached ? "Traffic Limit" : "Expired";
-        logger.info(`Disabled client ${client.subId}. Reason: ${reason}`);
-
+        newDepletedClients.add(client.subId);
       } catch (err) {
-        logger.error(`Failed to disable client ${client.subId}:`, err);
+        logger.error(`Error disabling client ${client.subId} from xui api : ${err}`);
       }
     }
+
   }
+
+  const clientsToDisable = Array.from(newDepletedClients);
+  if (clientsToDisable.length > 0) await addData(clientsToDisable)
 }
 
 async function changeClientUsage(client) {

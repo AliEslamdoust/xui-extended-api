@@ -20,14 +20,35 @@ async function getData(client_name) {
   });
 }
 
-async function addData(client_name) {
-  if (!client_name) return;
+async function getAllData() {
+  return await new Promise((resolve, reject) => {
+    db.all(
+      `SELECT * FROM depleted_clients`,
+      [],
+      (err, res) => {
+        if (err) {
+          logger.error(err);
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      }
+    );
+  });
+}
 
+async function addData(client_names) {
+  if (!client_names || client_names.length === 0) return;
+
+  let placeholder = client_names.map(() => "(?, ?)").join(", ");
   let timestamp = Date.now();
+
+  let values = client_names.flatMap(name => [name, timestamp]);
+
   await new Promise((res, rej) => {
     db.run(
-      `INSERT INTO depleted_clients (client_name, timestamp) VALUES (?, ?)`,
-      [client_name, timestamp],
+      `INSERT OR IGNORE INTO depleted_clients (client_name, timestamp) VALUES ${placeholder}`,
+      values,
       (err) => {
         if (err) {
           logger.error(err);
@@ -40,13 +61,15 @@ async function addData(client_name) {
   });
 }
 
-async function deleteData(client_name) {
-  if (!client_name) return;
+async function deleteData(client_names) {
+  if (!client_names || client_names.length === 0) return;
+
+  let placeholder = client_names.map(() => "?").join(", ");
 
   await new Promise((res, rej) => {
     db.run(
-      `DELETE FROM depleted_clients WHERE client_name = ?`,
-      [client_name],
+      `DELETE FROM depleted_clients WHERE client_name IN ${placeholder}`,
+      client_names,
       (err) => {
         if (err) {
           logger.error(err);
@@ -81,4 +104,5 @@ module.exports = {
   deleteData,
   updateCookie,
   getData,
+  getAllData
 };
