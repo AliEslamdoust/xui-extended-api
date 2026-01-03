@@ -156,3 +156,7 @@ Manually sets or unsets the depleted status for a client.
     }
   }
   ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
