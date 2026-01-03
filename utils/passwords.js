@@ -1,21 +1,23 @@
 const bcrypt = require("bcrypt");
-const { getYAMLConfig } = require("../db/config");
+const { getConfig } = require("../config");
 
 // create a new hash for passwords
 async function hashPassword(password) {
   const saltRounds = 10;
-  const hash = await bcrypt.hash(password, saltRounds);
+  return await bcrypt.hash(password, saltRounds);
 
-  return hash;
 }
 
 // compare stored hash with entered password
 async function comparePassword(password) {
-  const config = getYAMLConfig();
+  const config = getConfig();
 
-  const result = await bcrypt.compare(password, config.accesscode);
-  
-  return result;
+  if (!config || !config.accesscode) {
+    throw new Error("Access code is not set in configuration.");
+  }
+
+  return await bcrypt.compare(password, config.accesscode);
+
 }
 
 module.exports = {

@@ -1,5 +1,5 @@
 const logger = require("../utils/logger");
-const { db } = require("./connect.db");
+const { db } = require("./connection");
 
 async function getData(client_name) {
   if (!client_name) return {};
@@ -22,18 +22,14 @@ async function getData(client_name) {
 
 async function getAllData() {
   return await new Promise((resolve, reject) => {
-    db.all(
-      `SELECT * FROM depleted_clients`,
-      [],
-      (err, res) => {
-        if (err) {
-          logger.error(err);
-          reject(err);
-        } else {
-          resolve(res);
-        }
+    db.all(`SELECT * FROM depleted_clients`, [], (err, res) => {
+      if (err) {
+        logger.error(err);
+        reject(err);
+      } else {
+        resolve(res);
       }
-    );
+    });
   });
 }
 
@@ -43,7 +39,7 @@ async function addData(client_names) {
   let placeholder = client_names.map(() => "(?, ?)").join(", ");
   let timestamp = Date.now();
 
-  let values = client_names.flatMap(name => [name, timestamp]);
+  let values = client_names.flatMap((name) => [name, timestamp]);
 
   await new Promise((res, rej) => {
     db.run(
@@ -99,10 +95,24 @@ async function updateCookie(cookie) {
   });
 }
 
+async function getCookie() {
+  return new Promise((res, rej) => {
+    db.get(`SELECT * FROM cookie LIMIT 1`, [], (err, row) => {
+      if (err) {
+        logger.error(err);
+        rej(err);
+      } else {
+        res(row ? row.cookie : null);
+      }
+    });
+  });
+}
+
 module.exports = {
   addData,
   deleteData,
   updateCookie,
+  getCookie,
   getData,
-  getAllData
+  getAllData,
 };

@@ -3,7 +3,8 @@ const path = require("path");
 
 const mainFormat = winston.format.printf(
   ({ level, message, timestamp, ...meta }) => {
-    return `${timestamp} ${level}: ${message} ${JSON.stringify(meta)}`;
+    const metaString = Object.keys(meta).length ? JSON.stringify(meta) : "";
+    return `${timestamp} ${level}: ${message} ${metaString}`;
   }
 );
 
@@ -14,9 +15,15 @@ const logger = winston.createLogger({
     mainFormat
   ),
   transports: [
-    new winston.transports.Console(),
+    new winston.transports.Console(
+      {
+        format: winston.format.combine(
+          winston.format.colorize(),
+          mainFormat
+        )
+      }),
     new winston.transports.File({
-      filename: path.join(__dirname, "../combined.log"),
+      filename: path.join(__dirname, "../app.log"),
     }),
   ],
 });

@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { restartXray } = require("../controllers/restartXray");
+const { restartXray, addClientToXUI, removeClientFromXUI, updateClient } = require("../services/xuiApi");
 const {
   startInterval,
   stopInterval,
-} = require("../controllers/checkClientsInterval");
-const { updateClient } = require("../controllers/alterData");
+} = require("../jobs/clientMonitor");
+const { getClientBySubId } = require("../services/clientReader");
 
 // start clients status checking on current server
 router.get("/api/startSync", (req, res) => {

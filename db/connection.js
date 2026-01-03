@@ -1,10 +1,10 @@
 const sqlite = require("sqlite3").verbose();
 const path = require("path");
-const { createDataBase } = require("./setup.db");
-const { getYAMLConfig } = require("./config");
+const { createDataBase } = require("./setup");
+const { getConfig } = require("../config");
 const logger = require("../utils/logger");
 
-const config = getYAMLConfig();
+const config = getConfig();
 
 const dbPath = path.join(__dirname, "./db.sqlite");
 // connect to sqlite3 database
