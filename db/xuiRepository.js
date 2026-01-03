@@ -1,5 +1,5 @@
+const { getConfig } = require("../config");
 const { getInbounds } = require("./xui");
-const { getConfig } = require("./manager");
 
 // get all inbounds with clients from xui database
 async function getAllInbounds() {

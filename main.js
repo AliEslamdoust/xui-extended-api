@@ -3,10 +3,10 @@ const app = express();
 const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
 const router = require("./routes/main");
-const { getYAMLConfig } = require("./db/config");
-const { comparePassword } = require("./utils/passwords");
+const { getConfig } = require("./config");
+const { comparePassword } = require("./utils/securityUtils");
 
-const PORT = getYAMLConfig().port;
+const PORT = getConfig().port;
 
 app.use((req, res, next) => {
   const accesscode = req.headers.accesscode;
