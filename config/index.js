@@ -28,6 +28,10 @@ function loadConfigFile() {
   }
 }
 
+function reloadConfigFile() {
+  config = loadConfigFile();
+}
+
 // write config.yaml changes, send a restart log if required
 function saveConfigFile(new_config) {
   if (new_config.PORT !== config.PORT) {
@@ -38,7 +42,9 @@ function saveConfigFile(new_config) {
   try {
     fs.writeFileSync(config_file_path, yaml.dump(new_config))
 
-    logger.info("Config saved.");
+    reloadConfigFile()
+
+    logger.info("Config saved and reloaded.");
   } catch (e) {
     logger.error("Failed to save config.yaml: " + err.message);
 
@@ -48,4 +54,5 @@ function saveConfigFile(new_config) {
 module.exports = {
   getConfig: () => config,
   updateConfig: (new_config) => saveConfigFile(new_config),
+  reloadConfig: () => reloadConfigFile(),
 };
