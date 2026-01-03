@@ -1,26 +1,33 @@
-const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const { getConfig } = require("../config");
 
-// create a new hash for passwords
-async function hashPassword(password) {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-
+function generateApiKey() {
+  const key = crypto.randomBytes(32).toString("hex");
+  const hash = hashApiKey(key);
+  return { key, hash };
 }
 
-// compare stored hash with entered password
-async function comparePassword(password) {
+function hashApiKey(key) {
+  return crypto.createHash("sha256").update(key).digest("hex");
+}
+
+function validateApiKey(inputKey) {
+  if (!inputKey) return false;
   const config = getConfig();
+  const storedHash = config.API_KEY;
+  if (!storedHash) return false;
 
-  if (!config || !config.accesscode) {
-    throw new Error("Access code is not set in configuration.");
-  }
+  const inputHash = hashApiKey(inputKey);
 
-  return await bcrypt.compare(password, config.accesscode);
+  const bufferA = Buffer.from(inputHash);
+  const bufferB = Buffer.from(storedHash);
 
+  if (bufferA.length !== bufferB.length) return false;
+
+  return crypto.timingSafeEqual(bufferA, bufferB);
 }
 
 module.exports = {
-  hashPassword,
-  comparePassword,
+  validateApiKey,
+  generateApiKey,
 };

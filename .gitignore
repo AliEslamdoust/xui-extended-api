@@ -1,6 +1,7 @@
 node_modules/
 *.log
-db/config.yaml
+config/config.yaml
 db/db.sqlite
 .vscode/
 .DS_Store
+.env

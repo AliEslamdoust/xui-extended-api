@@ -1,6 +1,6 @@
 const { reloadConfig, getConfig, updateConfig } = require("../config");
 const { restartXray } = require("../services/xuiApi");
-const { hashPassword, comparePassword } = require("../utils/securityUtils");
+const { generateApiKey } = require("../utils/securityUtils");
 
 // reload config.yaml
 exports.reload = async (req, res) => {
@@ -8,27 +8,15 @@ exports.reload = async (req, res) => {
     res.json({ ok: true, msg: "reloaded successfully" });
 }
 
-// change hash passowrd
-exports.updatePassword = async (req, res) => {
-    const new_password = req.headers.password;
-
-    if (!new_password || new_password.length === 0) {
-        return res.status(400).json({ ok: false, msg: "password is required." });
-    }
-    const isPasswordTheSame = await comparePassword(new_password);
-    if (isPasswordTheSame) {
-        return res.status(400).json({ ok: false, msg: "new password is the same as the old one." });
-    } else if (new_password.length < 8) {
-        return res.status(400).json({ ok: false, msg: "password is too short. minimum length is 8 characters." });
-    }
-
-    let new_hash = await hashPassword(new_password);
+// new api key
+exports.newPassword = async (req, res) => {
+    const { key, hash } = generateApiKey();
 
     let config = getConfig()
-    config.accesscode = new_hash;
+    config.API_KEY = hash;
     updateConfig(config);
 
-    res.json({ ok: true, msg: "password updated successfully" });
+    res.json({ ok: true, msg: "Created a new API Key.", apiKey: key });
 }
 
 // request for restarting xray core

@@ -4,13 +4,13 @@ const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
 const router = require("./routes/main");
 const { getConfig } = require("./config");
-const { comparePassword } = require("./utils/securityUtils");
+const { validateApiKey } = require("./utils/securityUtils");
 
 const PORT = getConfig().port;
 
 app.use((req, res, next) => {
-  const accesscode = req.headers.accesscode;
-  let compareKey = comparePassword(accesscode);
+  const API_KEY = req.headers.API_KEY;
+  let compareKey = validateApiKey(API_KEY);
 
   if (!compareKey) {
     res.json({ ok: false, msg: "Invalid access code!" });

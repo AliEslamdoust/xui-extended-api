@@ -2,10 +2,10 @@
 # If you haven't changed the path in X-UI settings, then don't change this
 xui_database: /etc/x-ui/x-ui.db
 
-# API access code
-# Default password is "mypassword", please change it as soon as possible
-# you can change it in bots' management panel
-accesscode: BUUpKWkFFRUFBRUlWWE5sY201aGJXVUJEQUFCQ0ZCaGMzTjNi
+# API Key. Must be the same as the one set in request headers
+# You can generate a new API key using the generateAPIKey.js script
+# Example API Key: 030161d643b237cbef1a61a5ec4ee424679f656bb33c6ddedac20d3727411462
+API_KEY: "YOUR_API_KEY_HASH"
 
 # Database update delay in seconds
 # Enter a number greater thatn 1 to avoid spams on database and crashing
