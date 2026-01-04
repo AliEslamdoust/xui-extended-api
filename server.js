@@ -3,10 +3,9 @@ const app = express();
 const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
 const router = require("./routes/main");
-const { getConfig } = require("./config");
 const { validateApiKey } = require("./utils/securityUtils");
 
-const PORT = getConfig().port;
+const PORT = process.env.PORT || 5594;
 
 app.use((req, res, next) => {
   const API_KEY = req.headers.API_KEY;

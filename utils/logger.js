@@ -23,7 +23,7 @@ const logger = winston.createLogger({
         )
       }),
     new winston.transports.File({
-      filename: path.join(__dirname, "../app.log"),
+      filename: path.join(__dirname, "../log/app.log"),
     }),
   ],
 });

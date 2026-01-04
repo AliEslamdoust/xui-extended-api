@@ -17,7 +17,9 @@ router.post("/api/setDepletedFlag", clientController.setDepletedFlag);
 router.get("/api/SIDbyID/:id", clientController.subIdById);
 router.get("/api/SIDbyEmail/:email", clientController.subIdByEmail);
 router.get("/api/reload", systemController.reload);
-router.get("/api/newPassword", systemController.newPassword);
+router.get("/api/newApiKey", systemController.newAPIKey);
 router.get("/api/restartXray", systemController.restartXrayCore);
+router.post("/api/changePanelAddress", systemController.changePanelAddress);
+router.post("/api/changePanelInbounds", systemController.changePanelInbounds);
 
 module.exports = router;

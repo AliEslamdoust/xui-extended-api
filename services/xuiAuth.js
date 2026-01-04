@@ -1,25 +1,25 @@
 const logger = require("../utils/logger");
-const axios = require("axios"); 
+const axios = require("axios");
 const { updateCookie } = require("../db/local");
 const { getConfig } = require("../config");
 
 // receive X-UIs' cookie
 async function refreshCookie() {
   try {
-  let config = getConfig();
+    let config = getConfig();
 
     let res = await axios({
       method: "post",
       maxBodyLength: Infinity,
-      url: `${config.xui.address}:${config.xui.port}/login`,
+      url: `${config.xui.address}/login`,
       headers: {
         "Content-Type": "application/json",
       },
       data: JSON.stringify({
-        username: config.xui.username,
-        password: config.xui.password,
+        username: process.env.xui.username,
+        password: process.env.xui.password,
       }),
-    })
+    });
 
     if (res.data.success) {
       const cookies = res.headers["set-cookie"];
@@ -35,9 +35,10 @@ async function refreshCookie() {
         logger.warn("Login successful, but server sent no Set-Cookie header.");
       }
     } else {
-      logger.warn(res.data.msg || "Login failed: Server returned success=false");
+      logger.warn(
+        res.data.msg || "Login failed: Server returned success=false"
+      );
     }
-
   } catch (err) {
     const errMsg = err.response?.data?.msg || err.message;
     logger.error("Failed to refresh cookie: " + errMsg);

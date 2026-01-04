@@ -1,5 +1,5 @@
-const { setAPIKey } = require("./config/setAPIKey");
-const { generateApiKey } = require("./utils/securityUtils");
+const { setAPIKey } = require("../config/setAPIKey");
+const { generateApiKey } = require("./securityUtils");
 const readline = require("readline").createInterface({
   input: process.stdin,
   output: process.stdout,

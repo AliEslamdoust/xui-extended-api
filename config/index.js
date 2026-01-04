@@ -32,13 +32,8 @@ function reloadConfigFile() {
   config = loadConfigFile();
 }
 
-// write config.yaml changes, send a restart log if required
+// write config.yaml changes
 function saveConfigFile(new_config) {
-  if (new_config.PORT !== config.PORT) {
-    logger.warn(
-      "PORT has been changed. You must RESTART the server for this to take effect."
-    );
-  }
   try {
     fs.writeFileSync(config_file_path, yaml.dump(new_config))
 
