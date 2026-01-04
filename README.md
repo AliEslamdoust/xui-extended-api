@@ -20,29 +20,35 @@ This project provides an extended API for managing the [X-UI](https://github.com
     cd xui-extended-api
     ```
 
-2.  **Install dependencies:**
+2.  **Configuration:**
 
-    ```bash
-    npm install
-    ```
+    - **Application Config:**
+      Duplicate the template configuration file:
 
-3.  **Configuration:**
-
-    - Duplicate the template configuration file:
       ```bash
       cp config/config.template.yaml config/config.yaml
       ```
-    - Edit `config/config.yaml` with your X-UI credentials, API port, and desired access code.
 
-4.  **Start the Server:**
+      Edit `config/config.yaml` with your X-UI credentials, API port, and desired access code.
+
+    - **Environment Variables:**
+      Create the `.env` file from the template:
+      ```bash
+      cp .env.template .env
+      ```
+      Edit `.env` to match the port defined in your `config.yaml` (default: 5594).
+
+3.  **Start the Server (Docker):**
+
+    Build and run the container using Docker Compose:
+
     ```bash
-    node main.js
+    docker-compose up -d --build
     ```
-    The server will start on the port specified in `config/config.yaml` (default: 5594).
+
+    The server will start on the port specified in your configuration (default: 5594).
 
 ## Configuration
-
-The application uses a `config.yaml` file located in the `config/` directory.
 
 - **port**: The port the API server will listen on.
 - **access_code**: The code required in the header to authenticate requests.
@@ -52,9 +58,9 @@ The application uses a `config.yaml` file located in the `config/` directory.
 ## API Documentation
 
 **Authentication**:
-All API endpoints require the `accesscode` header.
+All API endpoints require the `API_KEY` header.
 
-- **Header Key**: `accesscode`
+- **Header Key**: `API_KEY`
 - **Value**: Your configured access code (from `config.yaml`).
 
 ### System
@@ -63,12 +69,23 @@ All API endpoints require the `accesscode` header.
 
 Reloads the database and configuration settings without restarting the Node.js process.
 
-#### `POST /api/updatePassword`
+#### `GET /api/newApiKey`
 
-Updates the API access code hash in `config/config.yaml`.
+Generates a new API key for the application.
 
-- **Headers**:
-  - `password`: The new password to set.
+#### `POST /api/changePanelAddress`
+
+Updates the X-UI panel address in the configuration.
+
+- **Body**:
+  - `url`: The new X-UI panel URL (e.g., `http://127.0.0.1:54321`).
+
+#### `POST /api/changePanelInbounds`
+
+Updates the configured Inbound IDs.
+
+- **Body**:
+  - `inbounds`: An array of inbound IDs (e.g., `[1, 2, 3]`).
 
 #### `GET /api/restartXray`
 
