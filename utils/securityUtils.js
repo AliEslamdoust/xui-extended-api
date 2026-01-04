@@ -1,5 +1,4 @@
 const crypto = require("crypto");
-const { getConfig } = require("../config");
 
 function generateApiKey() {
   const key = crypto.randomBytes(32).toString("hex");
@@ -13,7 +12,8 @@ function hashApiKey(key) {
 
 function validateApiKey(inputKey) {
   if (!inputKey) return false;
-  const config = getConfig();
+  
+  const config = require("../config").getConfig();
   const storedHash = config.API_KEY;
   if (!storedHash) return false;
 

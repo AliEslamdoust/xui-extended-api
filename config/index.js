@@ -22,7 +22,7 @@ function loadConfigFile() {
     logger.info("Config loaded successfully");
     return yaml.load(fileContents);
   } catch (err) {
-    logger.error("CRITICAL: couldn't load config.yaml! please re-run the program");
+    logger.error("CRITICAL: couldn't load config.yaml! please re-run the program and make sure config.yaml exists.");
 
     throw err;
   }
