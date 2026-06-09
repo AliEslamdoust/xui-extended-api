@@ -1,8 +1,7 @@
-
-
-const { addData, getAllData } = require("../db/local");
-const { getAllClients } = require("../services/clientReader");
-const { updateClient } = require("../services/xuiApi");
+const logger = require("../utils/logger");
+const { addData, getAllData } = require("../db/local-queries");
+const { getAllClients } = require("../services/client-aggregator");
+const { updateClient } = require("../services/xui-api");
 
 // this function checks clients status (overusing traffic and time expiry) and adds users to a exceptions list in database
 async function checkClients() {

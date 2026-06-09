@@ -1,7 +1,7 @@
 const axios = require("axios");
 const logger = require("../utils/logger");
-const { getCookie } = require("../db/local");
-const { refreshCookie } = require("./xuiAuth");
+const { getCookie } = require("../db/local-queries");
+const { refreshCookie } = require("./xui-auth");
 const { getConfig } = require("../config");
 
 // update a client in xui panel

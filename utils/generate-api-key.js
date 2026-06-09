@@ -1,6 +1,19 @@
-const { setAPIKey } = require("../config/setAPIKey");
-const { generateApiKey } = require("./securityUtils");
-const readline = require("readline").createInterface({
+const { setAPIKey } = require("../config/setup-api-key");
+const { generateApiKey } = require("./auth");
+const readline = require("readline");
+
+const Colors = {
+  YELLOW: "\x1b[33m",
+  BLUE: "\x1b[34m",
+  CYAN: "\x1b[36m",
+  GREEN: "\x1b[32m",
+  RED: "\x1b[31m",
+  ENDC: "\x1b[0m",
+  BOLD: "\x1b[1m",
+  ITALIC: "\x1b[3m",
+};
+
+const readlineInstance = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
@@ -38,17 +51,13 @@ function printHeader(text = "") {
 
 printHeader("Generate Access Code for X-UI Extended API");
 
-function print_success(text) {
+const printSuccess = (text) =>
   console.log(`${Colors.GREEN}✓ ${text}${Colors.ENDC}`);
-}
-
-function print_error(text) {
+const printError = (text) =>
   console.log(`${Colors.RED}✗ ${text}${Colors.ENDC}`);
-}
-
-function print_info(text) {
+const printInfo = (text) =>
   console.log(`${Colors.BLUE}ℹ ${text}${Colors.ENDC}`);
-}
+
 
 function main() {
   try {
@@ -61,7 +70,8 @@ function main() {
     console.log(key + "\n");
     print_success("API Key Hash (to be stored in config.yaml):");
     console.log(hash + "\n");
-    print_info(
+
+    printInfo(
       `${Colors.BLUE}Save the hash of the API Key to config.yaml file? ${Colors.ENDC}(${Colors.ITALIC}${Colors.BOLD}${Colors.GREEN}Y${Colors.ENDC}/${Colors.RED}n${Colors.ENDC})`
     );
 
@@ -82,8 +92,8 @@ function main() {
       process.exit(0);
     });
   } catch (err) {
-    print_error("Failed to generate API Key:");
-    console.log(err);
+    printError(err.message || err);
+    process.exit(1);
   }
 }
 
@@ -98,8 +108,8 @@ function saveAndExit(hash) {
       throw new Error("Failed to set API Key in config.yaml");
     }
   } catch (e) {
-    print_error("Failed to save API Key to config.yaml:");
-    console.log(e);
+    printError(e.message || e);
+    process.exit(1);
   } finally {
     readline.close();
     process.exit(0);

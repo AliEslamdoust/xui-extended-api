@@ -1,3 +1,3 @@
 #!/bin/sh
-node ./utils/generateAPIKey.js -y
+node ./utils/generate-api-key.js -y
 node ./server.js

@@ -1,3 +1,4 @@
+# **This Porject Is Deprecated As Of 6/10/2026**
 # X-UI Extended API
 
 This project provides an extended API for managing the [X-UI](https://github.com/MHSanaei/3x-ui) panel, offering advanced features for client synchronization, usage monitoring, and automated management.
@@ -23,7 +24,7 @@ This project provides an extended API for managing the [X-UI](https://github.com
 2.  **Configuration:**
 
     - **Application Config:**
-      Duplicate the template configuration file:
+      Copy the template configuration file:
 
       ```bash
       cp config/config.template.yaml config/config.yaml
@@ -43,17 +44,20 @@ This project provides an extended API for managing the [X-UI](https://github.com
     Build and run the container using Docker Compose:
 
     ```bash
-    docker-compose up -d --build
+    ./start.sh
     ```
 
     The server will start on the port specified in your configuration (default: 5594).
 
 ## Configuration
 
+### On .env:
 - **port**: The port the API server will listen on.
-- **access_code**: The code required in the header to authenticate requests.
-- **xui**: Credentials and URL for the X-UI panel you are managing.
-- **db**: Path to the SQLite database.
+- **xui credentials**: Credentials for the X-UI panel you are managing.
+
+### On config.yaml:
+- **API_KEY**: The API key created from by running `./start.sh` which is required in the header to authenticate requests.
+- **xui address and inbounds**: URL for the X-UI panel you are managing, and the ids of inbounds which you want to be managed by the script.
 
 ## API Documentation
 

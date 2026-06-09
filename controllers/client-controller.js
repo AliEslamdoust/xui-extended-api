@@ -1,10 +1,9 @@
-
 const { startInterval, stopInterval } = require("../jobs/scheduler");
-const { updateClient, removeClientFromXUI, addClientToXUI } = require("../services/xuiApi");
-const { changeClientUsageInXUI } = require("../services/clientService");
-const { getClientBySubId, getAllClients } = require("../services/clientReader");
-const { getAllData, addData, deleteData } = require("../db/local");
-const { getSubIdbyId, getAllSubIds, getSubIdbyEmail } = require("../utils/clientHelpers");
+const { updateClient, removeClientFromXUI, addClientToXUI } = require("../services/xui-api");
+const { changeClientUsageInXUI } = require("../services/usage-service");
+const { getClientBySubId, getAllClients } = require("../services/client-aggregator");
+const { getAllData, addData, deleteData } = require("../db/local-queries");
+const { getSubIdbyId, getAllSubIds, getSubIdbyEmail } = require("../utils/client-helpers");
 
 // SYNC
 

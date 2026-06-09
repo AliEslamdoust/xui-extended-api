@@ -22,6 +22,7 @@ function setAPIKey(newApiKeyHash) {
   }
 }
 
+// load config.template.yaml file
 function loadTempConfigFile() {
   try {
     const fileContents = fs.readFileSync(temp_config_file_path, "utf8");
