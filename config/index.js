@@ -40,7 +40,7 @@ function saveConfigFile(new_config) {
     reloadConfigFile()
 
     logger.info("Config saved and reloaded.");
-  } catch (e) {
+  } catch (err) {
     logger.error("Failed to save config.yaml: " + err.message);
 
   }

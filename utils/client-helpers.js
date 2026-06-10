@@ -1,4 +1,4 @@
-const { getAllInbounds } = require("../db/xuiRepository");
+const { getAllInbounds } = require("../db/xui-repository");
 
 // get all clients subscription ids
 async function getAllSubIds() {

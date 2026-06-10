@@ -1,5 +1,5 @@
 const logger = require("../utils/logger");
-const { updateClientUsage } = require("../db/xui");
+const { updateClientUsage } = require("../db/xui-queries");
 
 // change a clients usage in xui database
 async function changeClientUsageInXUI(client) {

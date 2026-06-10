@@ -1,5 +1,5 @@
-const { getAllClientsUsage, getClientUsage } = require("../db/xui");
-const { getAllInbounds } = require("../db/xuiRepository");
+const { getAllClientsUsage, getClientUsage } = require("../db/xui-queries");
+const { getAllInbounds } = require("../db/xui-repository");
 
 // get all clients information
 async function getAllClients() {

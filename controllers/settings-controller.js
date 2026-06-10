@@ -1,7 +1,7 @@
 const { reloadConfig, getConfig, updateConfig } = require("../config");
-const { restartXray } = require("../services/xuiApi");
-const { refreshCookie } = require("../services/xuiAuth");
-const { generateApiKey } = require("../utils/securityUtils");
+const { restartXray } = require("../services/xui-api");
+const { refreshCookie } = require("../services/xui-auth");
+const { generateApiKey } = require("../utils/auth");
 
 // reload config.yaml
 exports.reload = async (req, res) => {

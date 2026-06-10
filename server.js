@@ -1,11 +1,12 @@
 const express = require("express");
-const app = express();
 const bodyParser = require("body-parser");
 const logger = require("./utils/logger");
-const router = require("./routes/main");
-const { validateApiKey } = require("./utils/securityUtils");
+const router = require("./routes/index");
+const { validateApiKey } = require("./utils/auth");
 
-const PORT = process.env.PORT || 5594;
+const PORT = Number(process.env.PORT) || 5594;
+
+const app = express();
 
 app.use((req, res, next) => {
   const API_KEY = req.headers.API_KEY;
@@ -19,7 +20,11 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((err, res) => {
+app.use(bodyParser.json());
+app.use(express.json());
+app.use("", router);
+
+app.use((err, req, res, next) => {
   logger.error(err.stack);
 
   res
@@ -27,8 +32,4 @@ app.use((err, res) => {
     .json({ ok: false, msg: err.message || "An unexpected error has occured" });
 });
 
-app.use(bodyParser.json());
-app.use(express.json());
-app.use("", router);
-
-app.listen(PORT, logger.info("server started on port", PORT));
+app.listen(PORT, () => logger.info(`server started on port ${PORT}`));

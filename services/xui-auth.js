@@ -1,6 +1,6 @@
 const logger = require("../utils/logger");
 const axios = require("axios");
-const { updateCookie } = require("../db/local");
+const { updateCookie } = require("../db/local-queries");
 const { getConfig } = require("../config");
 
 // receive X-UIs' cookie
